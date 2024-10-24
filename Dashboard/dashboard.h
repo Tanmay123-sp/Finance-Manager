@@ -7,19 +7,29 @@
 #include <QStackedWidget>
 #include <QGridLayout>
 #include <QPushButton>
+#include <QLineEdit>
+#include <QTableView>
+#include <QTableWidget>
+#include "home.h"
+#include "../Database/database.h"
 
 class dashboard : public QWidget
 {
     Q_OBJECT
 public:
-    explicit dashboard(QWidget *parent = nullptr);
+    explicit dashboard(QString currentUser, QWidget *parent = nullptr);
     QLabel *labelUsername1;
     ~dashboard(){}
 
+    database *dbObj;
     QWidget* HomePage;
     QWidget* TransactionPage;
     QWidget* SendMoneyPage;
     QWidget* navWidget;
+    home* homeObj;
+    QTableWidget* transactionTable;
+    QVector<pair<QString, pair<QString, pair<QString, QString>>>>transactionHistory;
+    void updateTransactionPage();
 
 private:
 
@@ -34,13 +44,21 @@ private:
     QPushButton* homeButton;
     QPushButton* transactionButton;
     QPushButton* sendMoneyButton;
+    QPushButton* send;
+    QLineEdit *receiverName;
+    QLineEdit *inputAmt;
+    QString currentUser;
 
 signals:
+    void emitTransactionDetails(QString sender,QString receiver,QString amt);
 
 public slots:
     void switchToTransaction();
     void switchToHome();
     void switchToSendMoney();
+    void switchToHomeWidget();
+    void setTransactionDetails();
+    void getTransactionDetailsSlot();
 };
 
 #endif // DASHBOARD_H

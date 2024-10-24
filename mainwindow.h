@@ -11,6 +11,7 @@
 #include <QGridLayout>
 #include <QHBoxLayout>
 #include <QCoreApplication>
+#include <QCloseEvent>
 #include "database.h"
 #include "dashboard.h"
 
@@ -22,10 +23,13 @@ public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
-    QWidget *loginPage ;
-    QWidget *signUpPage ;
-    database* dbObj;
+    QWidget *loginPage = nullptr ;
+    QWidget *signUpPage = nullptr ;
+    database* dbObj = nullptr;
+    dashboard* dashObj = nullptr;
+    QString currentUser;
 
+    void closeEvent(QCloseEvent *event);
 private:
     QStackedWidget *stackwidget;
 
@@ -43,7 +47,7 @@ private:
     QPushButton *backToLoginButton;
     QWidget *centralWidget = new QWidget(this);
     QVBoxLayout *mainLayout = new QVBoxLayout(centralWidget);
-    dashboard* dashObj;
+
 
 signals:
     void emitSig(QString , QString);

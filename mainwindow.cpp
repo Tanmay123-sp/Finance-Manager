@@ -32,15 +32,31 @@ MainWindow::MainWindow(QWidget *parent)
 
     connect(submitButton, &QPushButton::clicked, this, &MainWindow::onSubmitButtonClicked);
     connect(this, &MainWindow::emitSig, this, &MainWindow::setUserDetailsToDB);
+    connect(dashObj, &QWidget::destroyed, this, &MainWindow::close);
 }
 
 MainWindow::~MainWindow()
 {
+    qDebug()<<"destruct";
+
+    // dashObj->close();
+    // delete dashObj;
+    qDebug()<<"dashObj";
     delete loginPage;
+    qDebug()<<"loginPage";
     delete signUpPage;
-    delete dashObj;
+    qDebug()<<"signUpPage";
     delete dbObj;
+    qDebug()<<"dbObj";
 }
+void MainWindow::closeEvent(QCloseEvent *event)
+{
+    qDebug() << "MainWindow is closing";
+    delete dashObj;
+    dashObj=nullptr;
+    event->accept();
+}
+
 
 QWidget* MainWindow::createLoginPage()
 {
@@ -160,8 +176,11 @@ void MainWindow::checkUserFromDb(QString a, QString b)
 
 void MainWindow::openDashboardAfterLogin()
 {
-    dashObj = new dashboard();
+    currentUser = inputUsername1->text();
+    qDebug()<<currentUser<<" main currentUser";
+    dashObj = new dashboard(currentUser);
     dashObj->show();
+
     qDebug()<<"dash win";
 }
 
