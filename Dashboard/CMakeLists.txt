@@ -1,16 +1,47 @@
 cmake_minimum_required(VERSION 3.16)
-
 project(Dashboard VERSION 0.1 LANGUAGES CXX)
 
-find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Core Widgets  REQUIRED)
-find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core Widgets  REQUIRED)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTORCC ON)
+set(CMAKE_AUTOUIC ON)
 
+set(Qt6_DIR "C:/Qt/6.7.2/mingw_64/lib/cmake/Qt6")
+set(Qt6Charts_DIR "C:/Qt/6.7.2/mingw_64/lib/cmake/Qt6Charts")
+
+# Find Qt packages
+find_package(Qt6 REQUIRED COMPONENTS
+    Core
+    Widgets
+    Sql
+    Charts
+)
+
+# Create the library
 add_library(dashboardLibrary STATIC
-dashboard.h dashboard.cpp
-home.h home.cpp)
+    dashboard.h
+    dashboard.cpp
+    home.h
+    home.cpp
+    icons.qrc
+)
 
-# Link the necessary Qt libraries to dashboardLibrary
-target_link_libraries(dashboardLibrary PRIVATE Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::Sql)
+# Add compile definitions
+target_compile_definitions(dashboardLibrary PRIVATE
+    QT_CHARTS_LIB
+)
 
-# Include directories for the Qt library (optional if CMake automatically finds them)
-target_include_directories(dashboardLibrary PRIVATE ${Qt${QT_VERSION_MAJOR}_INCLUDE_DIRS})
+# Link the necessary Qt libraries
+target_link_libraries(dashboardLibrary PRIVATE
+    Qt6::Core
+    Qt6::Widgets
+    Qt6::Sql
+    Qt6::Charts
+)
+
+# Include directories
+target_include_directories(dashboardLibrary PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_BINARY_DIR}
+)

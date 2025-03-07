@@ -1,6 +1,7 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+#include <QDateTime>
 #include <QMainWindow>
 #include <QStackedWidget>
 #include <QWidget>
@@ -14,6 +15,8 @@
 #include <QCloseEvent>
 #include "database.h"
 #include "dashboard.h"
+#include <QSettings>
+#include <QByteArray>
 
 class MainWindow : public QMainWindow
 {
@@ -45,9 +48,17 @@ private:
     QPushButton *signupButton;
     QPushButton *submitButton;
     QPushButton *backToLoginButton;
+    QDateTime currentDateTime;
+    QString formattedDateAndTime;
+    QString encryptedPass;
+    QString decryptPass;
     QWidget *centralWidget = new QWidget(this);
     QVBoxLayout *mainLayout = new QVBoxLayout(centralWidget);
-
+    void saveSession(const QString &username);
+    QString loadSession();
+    void clearSession();
+    QString encryptDecrypt(const QString& pass,char key);
+    QString decrypt(const QString& encryptedPass,char key);
 
 signals:
     void emitSig(QString , QString);

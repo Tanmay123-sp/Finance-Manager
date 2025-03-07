@@ -10,8 +10,10 @@
 #include <QLineEdit>
 #include <QTableView>
 #include <QTableWidget>
+#include <QHeaderView>
 #include "home.h"
 #include "../Database/database.h"
+#include <QSettings>
 
 class dashboard : public QWidget
 {
@@ -45,6 +47,7 @@ private:
     QPushButton* transactionButton;
     QPushButton* sendMoneyButton;
     QPushButton* send;
+    QPushButton* logoutButton;
     QLineEdit *receiverName;
     QLineEdit *inputAmt;
     QString currentUser;
@@ -59,6 +62,7 @@ public slots:
     void switchToHomeWidget();
     void setTransactionDetails();
     void getTransactionDetailsSlot();
+    void logoutUserSlot();
 };
 
 #endif // DASHBOARD_H

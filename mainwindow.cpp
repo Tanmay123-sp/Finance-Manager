@@ -1,15 +1,15 @@
 #include "mainwindow.h"
+#include <QUuid>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent),dbObj(database::getInstance())
 {
     this->setStyleSheet("QMainWindow { background-color: white; }");
     this->resize(800, 600);
-
-    QLabel *titleLabel = new QLabel(QCoreApplication::applicationName(), this);
-    titleLabel->setStyleSheet("font-size: 24px; font-weight: bold; color:green"); // Style the label
-    // titleLabel->setGeometry(100,100,0,120);
-    titleLabel->setAlignment(Qt::AlignCenter); //
+    this->setWindowTitle("Personal finance manager");
+    QLabel *titleLabel = new QLabel("Personal Finance", this);
+    titleLabel->setStyleSheet("font-size: 24px; font-weight: bold; color:green");
+    titleLabel->setAlignment(Qt::AlignCenter);
 
     stackwidget = new QStackedWidget(this);
     loginPage = createLoginPage();
@@ -25,7 +25,6 @@ MainWindow::MainWindow(QWidget *parent)
 
     connect(loginButton, &QPushButton::clicked, this, &MainWindow::onLoginButtonClicked);
     connect(this, &MainWindow::emitUserAndPass, this, &MainWindow::checkUserFromDb);
-    connect(loginButton, &QPushButton::clicked, this, &MainWindow::openDashboardAfterLogin);
 
     connect(inputPassword, &QLineEdit::textChanged, this, &MainWindow::checkPasswords);
     connect(inputPassword2, &QLineEdit::textChanged, this, &MainWindow::checkPasswords);
@@ -33,21 +32,26 @@ MainWindow::MainWindow(QWidget *parent)
     connect(submitButton, &QPushButton::clicked, this, &MainWindow::onSubmitButtonClicked);
     connect(this, &MainWindow::emitSig, this, &MainWindow::setUserDetailsToDB);
     connect(dashObj, &QWidget::destroyed, this, &MainWindow::close);
+    decryptPass = decrypt(encryptedPass,'a');
+    QString sessionUser = loadSession();
+    if(!sessionUser.isEmpty()){
+        currentUser = sessionUser;
+        dashObj = new dashboard(currentUser);
+        dashObj->show();
+        qDebug()<<"dashboard opened";
+    }
+    // if(sessionUser.isEmpty()){
+    //     connect(loginButton, &QPushButton::clicked, this, &MainWindow::openDashboardAfterLogin);
+    // }
 }
 
 MainWindow::~MainWindow()
 {
     qDebug()<<"destruct";
 
-    // dashObj->close();
-    // delete dashObj;
-    qDebug()<<"dashObj";
     delete loginPage;
-    qDebug()<<"loginPage";
     delete signUpPage;
-    qDebug()<<"signUpPage";
     delete dbObj;
-    qDebug()<<"dbObj";
 }
 void MainWindow::closeEvent(QCloseEvent *event)
 {
@@ -56,7 +60,6 @@ void MainWindow::closeEvent(QCloseEvent *event)
     dashObj=nullptr;
     event->accept();
 }
-
 
 QWidget* MainWindow::createLoginPage()
 {
@@ -160,12 +163,62 @@ QWidget* MainWindow::createSignUpPage()
     return signUpPage;
 }
 
+void MainWindow::saveSession(const QString &username)
+{
+    QSettings settings("FinanceApp","userSession");
+    QString sessionId = QUuid::createUuid().toString();
+    currentDateTime = QDateTime::currentDateTime();
+    formattedDateAndTime = currentDateTime.toString("yyyy-MM-dd hh:mm:ss");
+    encryptedPass = encryptDecrypt(inputPassword->text(),'a');
+    qDebug()<<encryptedPass;
+    qDebug()<<decrypt(encryptedPass,'a');
+    settings.setValue("session/sessionId",sessionId);
+    settings.setValue("session/username.pass.time",username+"."+encryptedPass+"."+formattedDateAndTime);
+    qDebug() << "Session saved for user:" << username<<" and session id:"<<sessionId<<"currentDateTime:"<<formattedDateAndTime;
+}
+
+QString MainWindow::loadSession()
+{
+    QSettings settings("FinanceApp","userSession");
+    QString storedUser = settings.value("session/username","").toString();
+    QString storedSessionId = settings.value("session/sessionId","").toString();
+    if(!storedSessionId.isEmpty()){
+        qDebug()<<"sessionId found, user :"<<storedUser;
+    }
+    else qDebug()<<"No active session";
+    return storedUser;
+}
+
+void MainWindow::clearSession()
+{
+    QSettings settings("FinanceApp","userSession");
+    settings.remove("session/userrname");
+}
+
+QString MainWindow::encryptDecrypt(const QString &pass, char key)
+{
+    QByteArray data = pass.toUtf8();
+    for(int i =0; i<data.size();i++){
+        data[i]=data[i]^key;
+    }
+    return QString::fromUtf8(data.toBase64());
+}
+
+QString MainWindow::decrypt(const QString &encryptedPass, char key)
+{
+    QByteArray data = QByteArray::fromBase64(encryptedPass.toUtf8());
+    for (int i = 0; i < data.size(); ++i) {
+        data[i] = data[i]^key;
+    }
+    return QString::fromUtf8(data);
+}
+
 void MainWindow::checkUserFromDb(QString a, QString b)
 {
     qDebug()<<a<<" = "<<b;
-    QVector<QString> userDetail = dbObj->getUserAndPass("tanmay");
+    QVector<QString> userDetail = dbObj->getUserAndPass(a);
     qDebug()<<"111"<<userDetail[0]<<" "<<userDetail[1];
-    if("tanmay" == userDetail[0]){
+    if(a == userDetail[0]){
         if(b == userDetail[1]){
             qDebug()<<"Login successfull";
         }
@@ -178,10 +231,10 @@ void MainWindow::openDashboardAfterLogin()
 {
     currentUser = inputUsername1->text();
     qDebug()<<currentUser<<" main currentUser";
+    saveSession(currentUser);
     dashObj = new dashboard(currentUser);
     dashObj->show();
-
-    qDebug()<<"dash win";
+    qDebug()<<"dashboard opened";
 }
 
 void MainWindow::switchToSignUp()
@@ -231,6 +284,6 @@ void MainWindow::onLoginButtonClicked()
 {
     QString user = inputUsername1->text();
     QString pass = inputPassword->text();
-    qDebug()<<"user = "<<user<<" = "<<pass;
+    qDebug()<<"onLoginButtonClicked() user = "<<user<<" = "<<pass;
     emit emitUserAndPass(user,pass);
 }

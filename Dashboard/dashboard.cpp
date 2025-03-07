@@ -5,17 +5,18 @@
 #include <QVBoxLayout>
 #include <QGridLayout>
 #include <QSpacerItem>
+#include <QFormLayout>
 
 using namespace std;
 
 dashboard::dashboard(QString currentUser, QWidget *parent)
     : currentUser{currentUser},
-      QWidget{parent},
-      dbObj(database::getInstance())
+    QWidget{parent},
+    dbObj(database::getInstance())
 {
     this->setStyleSheet("background-color:white");
     this->resize(800,600);
-
+    this->setWindowTitle("DashBoard");
     layout = new QVBoxLayout(this);
 
     navWidget = navigationBar();
@@ -33,42 +34,54 @@ dashboard::dashboard(QString currentUser, QWidget *parent)
     mainLayout->addWidget(navWidget,20);
     mainLayout->addWidget(stackWidget,80);
 
-    // connect(homeButton, &QPushButton::clicked, this, &dashboard::createHomePage);
-    // connect(transactionButton, &QPushButton::clicked, this, &dashboard::createTransactionsPage);
     connect(transactionButton, &QPushButton::clicked, this, &dashboard::getTransactionDetailsSlot);
     connect(transactionButton, &QPushButton::clicked, this, &dashboard::switchToTransaction);
 
     connect(homeButton, &QPushButton::clicked, this, &dashboard::switchToHome);
     connect(sendMoneyButton, &QPushButton::clicked, this, &dashboard::switchToSendMoney);
-    // connect(sendMoneyButton, &QPushButton::clicked, this, &dashboard::switchToHomeWidget);
     connect(this, &dashboard::emitTransactionDetails, dbObj, &database::updateTransactionDetails);
+    connect(logoutButton, &QPushButton::clicked, this, &dashboard::logoutUserSlot);
 }
 
 QWidget *dashboard::navigationBar()
 {
     navWidget = new QWidget(this);
     navWidget->setStyleSheet("background-color:#2c3e50; color: white;");
+
     QVBoxLayout* navLayout = new QVBoxLayout(navWidget);
-    QLabel *labelSidebar = new QLabel("Sidebar", navWidget);
-    labelSidebar->setStyleSheet("font-size: 18px; font-weight: bold; margin: 10px;");
 
+    QWidget *headerWidget = new QWidget(navWidget);
+    QHBoxLayout* navHeaderLayout = new QHBoxLayout(headerWidget);
+    headerWidget->setStyleSheet("background-color: #1abc9c;");
 
-    homeButton = new QPushButton(this);
-    homeButton->setText("Home");
+    QPixmap pixmap("C:/Users/HPGGS03/Documents/PersonalFianance/userIcon.png");
+    QLabel *imageLabel = new QLabel();
+    imageLabel->setPixmap(pixmap.scaled(24, 24, Qt::KeepAspectRatio));
+
+    QLabel *userNameLabel = new QLabel(currentUser);
+    userNameLabel->setStyleSheet("font-size: 18px; font-weight: bold; margin: 10px;");
+
+    navHeaderLayout->addWidget(imageLabel);
+    navHeaderLayout->addWidget(userNameLabel);
+    headerWidget->setLayout(navHeaderLayout);
+
+    homeButton = new QPushButton("Home", this);
     homeButton->setStyleSheet("font-size: 18px; font-weight: bold;");
 
-    transactionButton = new QPushButton(this);
-    transactionButton->setText("Transactions");
+    transactionButton = new QPushButton("Transactions", this);
     transactionButton->setStyleSheet("font-size: 18px; font-weight: bold;");
 
-    sendMoneyButton = new QPushButton(this);
-    sendMoneyButton->setText("Send Money");
+    sendMoneyButton = new QPushButton("Send Money", this);
     sendMoneyButton->setStyleSheet("font-size: 18px; font-weight: bold;");
 
-    navLayout->addWidget(labelSidebar);
+    logoutButton = new QPushButton("Logout",this);
+    logoutButton->setStyleSheet("font-size: 18px; font-weight: bold");
+    navLayout->addWidget(headerWidget);
     navLayout->addWidget(homeButton);
     navLayout->addWidget(transactionButton);
     navLayout->addWidget(sendMoneyButton);
+    navLayout->addSpacing(380);
+    navLayout->addWidget(logoutButton);
     navLayout->addStretch();
 
     return navWidget;
@@ -92,45 +105,87 @@ QWidget *dashboard::createHomePage()
     return HomePage1;
 }
 
-QWidget* dashboard::createTransactionsPage()
-{
+QWidget* dashboard::createTransactionsPage() {
     QWidget* transactionPage1 = new QWidget(this);
     transactionPage1->setObjectName("transactionPage1");
 
-    QVBoxLayout* pageLayout = new QVBoxLayout(transactionPage1);
-    pageLayout->setContentsMargins(10, 10, 10, 10);
+    // Create main layout for the page
+    QVBoxLayout* mainLayout = new QVBoxLayout(transactionPage1);
+    mainLayout->setContentsMargins(0, 0, 0, 0);
 
+    // Title label
     QLabel* pageTitle = new QLabel("Transactions", transactionPage1);
-    pageTitle->setStyleSheet("font-size: 24px; font-weight: bold;");
-    pageLayout->addWidget(pageTitle);
+    pageTitle->setAlignment(Qt::AlignCenter);
+    pageTitle->setStyleSheet("font-size: 24px; "
+                             "font-weight: bold; "
+                             "color: #2c3e50;"
+                             "margin-bottom: 30px;"
+                             "margin-top: 20px");
+
+    mainLayout->addWidget(pageTitle, 0, Qt::AlignCenter);
 
     transactionTable = new QTableWidget(0, 4, transactionPage1);
     transactionTable->setObjectName("transactionTable");
+    transactionTable->setFixedSize(500, 300);
+
     QStringList headers;
     headers << "Sender" << "Receiver" << "Amount" << "Date";
     transactionTable->setHorizontalHeaderLabels(headers);
+
+    transactionTable->horizontalHeader()->setVisible(true);
+    transactionTable->horizontalHeader()->setStretchLastSection(true);
+    transactionTable->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+    transactionTable->horizontalHeader()->setDefaultAlignment(Qt::AlignLeft);
+
+    transactionTable->verticalHeader()->setVisible(false);
+    transactionTable->setShowGrid(true);
+    transactionTable->setAlternatingRowColors(true);
+    transactionTable->setSelectionBehavior(QAbstractItemView::SelectRows);
+    transactionTable->setSelectionMode(QAbstractItemView::SingleSelection);
+
     transactionTable->setStyleSheet(
-        "QTableWidget { background-color: white; }"
-        "QHeaderView::section { background-color: #f0f0f0; }"
+        "QTableWidget {"
+        "   background-color: blue;"
+        "   border: 1px solid #e0e0e0;"
+        "   color: black;"
+        "   border-radius: 5px;"
+        "}"
+        "QHeaderView::section {"
+        "   background-color: #cccccc;"
+        "   color: green;"
+        "   padding: 8px;"
+        "   font-weight: bold;"
+        "   font-size: 14px;"
+        "   border: 1px solid #a0a0a0;"
+        "}"
         );
 
-    transactionTable->setMinimumSize(500, 300);
-    pageLayout->addWidget(transactionTable);
+    mainLayout->addWidget(transactionTable, 0, Qt::AlignCenter);
 
-    transactionPage1->setLayout(pageLayout);
+    mainLayout->addStretch(1);
 
     return transactionPage1;
 }
-
 void dashboard::updateTransactionPage()
 {
     if (!transactionTable) return;
 
-    transactionTable->setRowCount(0);  // Clear existing rows
+    transactionTable->setRowCount(0);
 
     transactionTable->setStyleSheet(
-        "QTableWidget { background-color: white; color: black; }"
-        "QHeaderView::section { background-color: #f0f0f0; color: black; }"
+        "QTableWidget {"
+        "   background-color: white;"
+        "   color: black;"
+        "}"
+        "QHeaderView::section {"
+        "   background-color: #e0e0e0;"
+        "   color: black;"
+        "   font-weight: bold;"
+        "   padding: 8px;"
+        "   border: none;"
+        "   border-bottom: 2px solid #a0a0a0;"
+        "   font-size: 14px;"
+        "}"
         );
 
     for (int i = 0; i < transactionHistory.size(); ++i)
@@ -155,27 +210,26 @@ void dashboard::updateTransactionPage()
 
         if (transactionId == currentUser)
         {
-            idItem->setBackground(QColor(255, 200, 200));  // Light green
+            idItem->setBackground(QColor(255, 200, 200));
             descItem->setBackground(QColor(255, 200, 200));
             amountItem->setBackground(QColor(255, 200, 200));
             dateItem->setBackground(QColor(255, 200, 200));
         }
         else if (description.split(" ").contains(currentUser))
         {
-            idItem->setBackground(QColor(200, 255, 200));  // Light red
+            idItem->setBackground(QColor(200, 255, 200));
             descItem->setBackground(QColor(200, 255, 200));
             amountItem->setBackground(QColor(200, 255, 200));
             dateItem->setBackground(QColor(200, 255, 200));
         }
-
         transactionTable->setItem(i, 0, idItem);
         transactionTable->setItem(i, 1, descItem);
         transactionTable->setItem(i, 2, amountItem);
         transactionTable->setItem(i, 3, dateItem);
     }
-
     transactionTable->resizeColumnsToContents();
     transactionTable->update();
+    transactionTable->repaint();
 }
 
 void dashboard::getTransactionDetailsSlot()
@@ -185,39 +239,95 @@ void dashboard::getTransactionDetailsSlot()
     qDebug() << "Updated transaction table with" << transactionHistory.size() << "rows";
 }
 
-QWidget *dashboard::createSendMoneyPage()
+void dashboard::logoutUserSlot()
+{
+    // QSettings settings("PersonalFinanceApp","userSession");
+    // settings.remove("session/username");
+    this->close();
+}
+
+QWidget* dashboard::createSendMoneyPage()
 {
     QWidget* sendMoneyPage1 = new QWidget(this);
-    QWidget* rightWidget = new QWidget(sendMoneyPage1);
-    rightWidget->setStyleSheet("background-color: blue;");
-    QGridLayout* rightLayout = new QGridLayout(rightWidget);
 
-    QLabel *labelUsername = new QLabel("Receiver username:", rightWidget);
-    labelUsername->setStyleSheet("color: #2c3e50; font-size: 16px;");
-    rightLayout->addWidget(labelUsername, 0, 0);
+    QVBoxLayout* mainLayout = new QVBoxLayout(sendMoneyPage1);
 
-    receiverName = new QLineEdit(rightWidget);
-    rightLayout->addWidget(receiverName, 0, 1);
+    QWidget* formContainer = new QWidget(sendMoneyPage1);
+    formContainer->setFixedWidth(400);
+    formContainer->setStyleSheet(
+        "QWidget {"
+        "   background-color: white;"
+        "   border-radius: 10px;"
+        "   padding: 20px;"
+        "}"
+        "QLineEdit {"
+        "   padding: 8px;"
+        "   border: 2px solid #e0e0e0;"
+        "   border-radius: 5px;"
+        "   font-size: 14px;"
+        // "   margin-bottom: 10px;"
+        "   color: black;"
+        "}"
+        "QLineEdit:focus {"
+        "   border-color: #3498db;"
+        "}"
+        "QPushButton {"
+        "   background-color: #3498db;"
+        "   color: white;"
+        "   border: none;"
+        "   padding: 10px 20px;"
+        "   border-radius: 5px;"
+        "   font-size: 16px;"
+        "   font-weight: bold;"
+        "}"
+        "QPushButton:hover {"
+        "   background-color: #2980b9;"
+        "}"
+        "QLabel {"
+        "   color: #2c3e50;"
+        "   font-size: 14px;"
+        "   font-weight: bold;"
+        "}"
+        );
 
-    QLabel *amtLabel = new QLabel("Amount:", rightWidget);
-    amtLabel->setStyleSheet("color: #2c3e50; font-size: 16px;");
-    rightLayout->addWidget(amtLabel, 1, 0);
+    QFormLayout* formLayout = new QFormLayout(formContainer);
+    formLayout->setSpacing(15);
+    formLayout->setContentsMargins(20, 20, 20, 20);
 
-    inputAmt = new QLineEdit(rightWidget);
-    rightLayout->addWidget(inputAmt, 1, 1);
+    QLabel* titleLabel = new QLabel("Send Money", formContainer);
+    titleLabel->setStyleSheet(
+        "font-size: 24px;"
+        "color: #2c3e50;"
+        "font-weight: bold;"
+        "margin-bottom: 20px;"
+        );
+    titleLabel->setAlignment(Qt::AlignCenter);
+    formLayout->addRow(titleLabel);
 
-    // Set parent of the button to rightWidget so it can be part of rightLayout
-    send = new QPushButton("Send", rightWidget);
-    send->setStyleSheet("color: #2c3e89; font-size: 18px; font-weight: bold;");
-    rightLayout->addWidget(send, 2, 0, 1, 2);  // Make sure it spans 2 columns
+    QLabel* labelUsername = new QLabel("Receiver Username", formContainer);
+    receiverName = new QLineEdit(formContainer);
+    receiverName->setPlaceholderText("Enter username");
+    formLayout->addRow(labelUsername);
+    formLayout->addRow(receiverName);
 
-    rightLayout->setColumnStretch(1, 2);
+    QLabel* amtLabel = new QLabel("Amount", formContainer);
+    inputAmt = new QLineEdit(formContainer);
+    inputAmt->setPlaceholderText("Enter amount");
+    formLayout->addRow(amtLabel);
+    formLayout->addRow(inputAmt);
+
+    send = new QPushButton("Send Money", formContainer);
+    formLayout->addRow(send);
+
+    mainLayout->addWidget(formContainer, 0, Qt::AlignCenter);
+
+    mainLayout->addStretch(1);
+    mainLayout->insertStretch(0, 2);
 
     connect(send, &QPushButton::clicked, this, &dashboard::setTransactionDetails);
 
     return sendMoneyPage1;
 }
-
 void dashboard::switchToTransaction()
 {
     stackWidget->setCurrentIndex(1);

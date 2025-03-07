@@ -39,14 +39,6 @@ bool database::createTable()
         qDebug() << "userInfo table creation failed: " << query.lastError().text();
     }
 
-    // query.prepare("CREATE TABLE IF NOT EXISTS transactionTable ("
-    //               "id INTEGER PRIMARY KEY AUTOINCREMENT,"
-    //               "sender TEXT NOT NULL,"
-    //               "receiver TEXT NOT NULL,"
-    //               "amount TEXT NOT NULL"
-    //               "timestamp DATETIME DEFAULT CURRENT_TIMESTAMP"
-    //               ");");
-
     query.prepare("CREATE TABLE IF NOT EXISTS transactionTable ("
                   "id INTEGER PRIMARY KEY AUTOINCREMENT,"
                   "sender TEXT NOT NULL,"
@@ -73,6 +65,7 @@ bool database::setUserDetails(QVector<QString>v)
     if(!success) {
         qDebug()<<"user and pass values doesn,t get inserted into userInfo table ";
     }
+    qDebug()<<"user and pass values are set to DB";
     return success;
 }
 
@@ -95,9 +88,10 @@ QVector<QString> database::getUserAndPass(QString userName)
 {
     QVector<QString>userDetails;
     QSqlQuery query;
-    qDebug()<<"getuser";
+    qDebug()<<"getuser"<<userName;
     query.prepare("SELECT user,pass FROM userInfo WHERE user = :userName");
     query.bindValue(":userName", userName);
+    qDebug()<<"getuser1";
     if(query.exec() && query.next()){
         userDetails.append(query.value(0).toString());
         userDetails.append(query.value(1).toString());
