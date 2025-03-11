@@ -40,11 +40,10 @@ MainWindow::MainWindow(QWidget *parent)
         dashObj->show();
         qDebug()<<"dashboard opened";
     }
-    // if(sessionUser.isEmpty()){
-    //     connect(loginButton, &QPushButton::clicked, this, &MainWindow::openDashboardAfterLogin);
-    // }
+    else{
+        connect(loginButton, &QPushButton::clicked, this, &MainWindow::openDashboardAfterLogin);
+    }
 }
-
 MainWindow::~MainWindow()
 {
     qDebug()<<"destruct";
@@ -102,7 +101,6 @@ QWidget* MainWindow::createLoginPage()
     loginLayout->addSpacerItem(new QSpacerItem(20, 40, QSizePolicy::Minimum, QSizePolicy::Expanding));
 
     connect(signupButton, &QPushButton::clicked, this, &MainWindow::switchToSignUp);
-
     return loginPage;
 }
 
@@ -173,6 +171,7 @@ void MainWindow::saveSession(const QString &username)
     qDebug()<<encryptedPass;
     qDebug()<<decrypt(encryptedPass,'a');
     settings.setValue("session/sessionId",sessionId);
+    settings.setValue("session/username",username);
     settings.setValue("session/username.pass.time",username+"."+encryptedPass+"."+formattedDateAndTime);
     qDebug() << "Session saved for user:" << username<<" and session id:"<<sessionId<<"currentDateTime:"<<formattedDateAndTime;
 }

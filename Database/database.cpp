@@ -50,12 +50,10 @@ bool database::createTable()
         success = false;
         qDebug() << "transactionTable creation failed: " << query.lastError().text();
     }
-
     return success;
 }
 bool database::setUserDetails(QVector<QString>v)
 {
-
     qDebug()<<v[0]<<" === "<<v[1];
     QSqlQuery query;
     query.prepare("INSERT INTO userInfo(user,pass) VALUES (:user,:pass) ;");
